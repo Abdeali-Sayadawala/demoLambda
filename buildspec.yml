@@ -1,0 +1,54 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Install phase"
+      # Add any installation commands here if needed
+  
+  pre_build:
+    commands:
+      - echo "Pre-build phase"
+      # Any commands to execute before the build (optional)
+
+  build:
+    commands:
+      - echo "Build phase"
+      - cd lambda/functions  # Replace with the path to your root directory
+
+      # Loop through each subdirectory
+      - for dir in */; do
+          dir=${dir%*/}  # Remove trailing slash
+          echo "Processing directory: $dir";
+
+          # # Case statement to check specific directory names
+          # case "$dir" in
+          #   dir1)
+          #     echo "Processing directory 1: $dir";
+          #     # Add specific commands for directory 1
+          #     ;;
+          #   dir2)
+          #     echo "Processing directory 2: $dir";
+          #     # Add specific commands for directory 2
+          #     ;;
+          #   *)
+          #     echo "Skipping directory: $dir";
+          #     continue  # Skip to the next iteration for unrecognized directories
+          #     ;;
+          # esac
+
+          echo "Zipping contents of $dir";
+          zip -r "$dir.zip" "$dir";  # Zip the contents of each subdirectory
+          if aws lambda get-function --function-name $dir --region us-east-1 2>/dev/null; then
+            echo "Lambda function $function_name already exists, updating..."
+            aws lambda update-function-code --function-name $dir --zip-file ./$dir.zip
+          else
+            echo "Lambda function $function_name does not exist, creating..."
+            aws lambda create-function --function-name $dir --runtime python3.12 --handler lambda_function.lambda_handler --zip-file ./$dir.zip
+          fi
+        done
+
+  post_build:
+    commands:
+      - echo "Post-build phase"
+      # Any commands to execute after the build (optional)
