@@ -19,7 +19,7 @@ phases:
       # Loop through each subdirectory
       - |
         for dir in */; do
-          dir=${dir%*/}  # Remove trailing slash
+          # dir=${dir%*/}  # Remove trailing slash
           echo "Processing directory: $dir";
 
           # Case statement to check specific directory names
