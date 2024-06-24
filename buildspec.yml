@@ -22,21 +22,15 @@ phases:
           dir=${dir%*/}  # Remove trailing slash
           echo "Processing directory: $dir";
 
-          # # Case statement to check specific directory names
-          # case "$dir" in
-          #   dir1)
-          #     echo "Processing directory 1: $dir";
-          #     # Add specific commands for directory 1
-          #     ;;
-          #   dir2)
-          #     echo "Processing directory 2: $dir";
-          #     # Add specific commands for directory 2
-          #     ;;
-          #   *)
-          #     echo "Skipping directory: $dir";
-          #     continue  # Skip to the next iteration for unrecognized directories
-          #     ;;
-          # esac
+          # Case statement to check specific directory names
+          case "$dir" in
+            dir1)
+              role_arn=arn:aws:iam::256772913192:role/LambdaOneRole
+              ;;
+            *)
+              role_arn=arn:aws:iam::256772913192:role/LambdaFunctionDefault
+              ;;
+          esac
 
           echo "Zipping contents of $dir";
           zip -r "$dir.zip" "$dir";  # Zip the contents of each subdirectory
@@ -45,7 +39,7 @@ phases:
             aws lambda update-function-code --function-name $dir --zip-file ./$dir.zip
           else
             echo "Lambda function $function_name does not exist, creating..."
-            aws lambda create-function --function-name $dir --runtime python3.12 --handler lambda_function.lambda_handler --zip-file ./$dir.zip
+            aws lambda create-function --function-name $dir --role role_arn --runtime python3.12 --handler lambda_function.lambda_handler --zip-file ./$dir.zip
           fi
         done
 
