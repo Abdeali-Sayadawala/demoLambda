@@ -33,7 +33,8 @@ phases:
           esac
 
           echo "Zipping contents of $dir";
-          zip -r "$dir.zip" "$dir/*";  # Zip the contents of each subdirectory
+          cd $dir;
+          zip -r "$dir.zip" ./*;  # Zip the contents of each subdirectory
           if aws lambda get-function --function-name $dir --region ap-south-1 2>/dev/null; then
             echo "Lambda function $function_name already exists, updating..."
             aws lambda update-function-code --function-name $dir --zip-file fileb://$dir.zip
@@ -41,6 +42,7 @@ phases:
             echo "Lambda function $function_name does not exist, creating..."
             aws lambda create-function --function-name $dir --role $role_arn --runtime python3.12 --handler lambda_function.lambda_handler --zip-file fileb://$dir.zip
           fi
+          cd ..
         done
 
   post_build:
