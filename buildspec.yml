@@ -24,7 +24,7 @@ phases:
 
           # Case statement to check specific directory names
           case "$dir" in
-            dir1)
+            LambdaFunctionOne)
               role_arn=arn:aws:iam::256772913192:role/LambdaOneRole
               ;;
             *)
