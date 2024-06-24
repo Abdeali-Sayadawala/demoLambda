@@ -34,7 +34,7 @@ phases:
 
           echo "Zipping contents of $dir";
           zip -r "$dir.zip" "$dir/";  # Zip the contents of each subdirectory
-          if aws lambda get-function --function-name $dir --region us-east-1 2>/dev/null; then
+          if aws lambda get-function --function-name $dir --region ap-south-1 2>/dev/null; then
             echo "Lambda function $function_name already exists, updating..."
             aws lambda update-function-code --function-name $dir --zip-file fileb://$dir.zip
           else
