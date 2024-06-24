@@ -17,7 +17,8 @@ phases:
       - cd lambda/functions  # Replace with the path to your root directory
 
       # Loop through each subdirectory
-      - for dir in */; do
+      - |
+        for dir in */; do
           dir=${dir%*/}  # Remove trailing slash
           echo "Processing directory: $dir";
 
