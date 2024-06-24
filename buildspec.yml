@@ -14,7 +14,7 @@ phases:
   build:
     commands:
       - echo "Build phase"
-      - cd lambda/functions  # Replace with the path to your root directory
+      - cd lamdba/functions  # Replace with the path to your root directory
 
       # Loop through each subdirectory
       - |
