@@ -39,7 +39,7 @@ phases:
             aws lambda update-function-code --function-name $dir --zip-file fileb://$dir.zip
           else
             echo "Lambda function $function_name does not exist, creating..."
-            aws lambda create-function --function-name $dir --role role_arn --runtime python3.12 --handler lambda_function.lambda_handler --zip-file fileb://$dir.zip
+            aws lambda create-function --function-name $dir --role $role_arn --runtime python3.12 --handler lambda_function.lambda_handler --zip-file fileb://$dir.zip
           fi
         done
 
