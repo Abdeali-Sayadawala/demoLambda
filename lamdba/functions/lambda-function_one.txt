@@ -1,0 +1,3 @@
+function_name=LambdaFunctionOne
+path=LambdaFunctionOne
+role=aws:iam::256772913192:role/LambdaOneRole
