@@ -18,27 +18,27 @@ phases:
 
       # Loop through each subdirectory
       - |
-        for dir in */lambda*.prm; do
+        for dir in lambda-*.prm; do
           echo "process started $dir"
           lambda_prm=$(cat $dir)
           for line in $lambda_prm;
           do
-            prm_arr=(${line//=/ })
-            case "${arrIN[0]}" in
-              function_name)
-                function_name=${arrIN[1]}
-                ;;
-              path)
-                function_path=${arrIN[1]}
-                ;;
-              role)
-                function_role_arn=${arrIN[1]}
-                ;;
-              *)
-                extra=${arrIN[1]}
-                ;;
-            esac
-          done                    
+              prm_arr=(${line//=/ })
+              case "${prm_arr[0]}" in
+                  function_name)
+                      function_name=${prm_arr[1]}
+                      ;;
+                  path)
+                      function_path=${prm_arr[1]}
+                      ;;
+                  role)
+                      function_role_arn=${prm_arr[1]}
+                      ;;
+                  *)
+                      extra=${prm_arr[1]}
+                      ;;
+              esac
+          done                
           echo "Processing function: $function_name";
 
           echo "Zipping contents of $path";
