@@ -18,10 +18,11 @@ phases:
       - |
         cd layers
         for dir in ./*; do
-          echo "processing lambda layer: $dir"
-          (cd $dir && zip -r "../$dir.zip" ./*;)
-          echo "creating lambda layer: $dir"
-          aws lambda publish-layer-version --layer-name $dir --zip-file fileb://$dir.zip --compatible-runtimes python3.10 python3.11 python3.12
+          layer_name = ${dir:1}
+          echo "processing lambda layer: $layer_name"
+          (cd $dir && zip -r "../$layer_name.zip" ./*;)
+          echo "creating lambda layer: $layer_name"
+          aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.12
         done
         cd ..
         echo "completed processing lambda layers"
