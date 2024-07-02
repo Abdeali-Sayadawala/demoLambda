@@ -18,7 +18,7 @@ phases:
       - |
         cd layers
         for dir in ./*; do
-          layer_name=${dir:1}
+          layer_name=${dir:2}
           echo "processing lambda layer: $layer_name"
           (cd $dir && zip -r "../$layer_name.zip" ./*;)
           echo "creating lambda layer: $layer_name"
