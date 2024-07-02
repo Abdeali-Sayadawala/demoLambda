@@ -18,7 +18,8 @@ phases:
       - |
         for dir in ./layers/; do
           echo "layers: $dir"
-      
+        done
+              
       - cd functions
       # Loop through each subdirectory
       - |
