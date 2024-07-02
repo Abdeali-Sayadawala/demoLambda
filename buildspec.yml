@@ -16,10 +16,10 @@ phases:
       - echo "Build phase"
       - cd lamdba  # Replace with the path to your root directory
       - |
-        for dir in ./layers/; do
+        for dir in ./layers/*; do
           echo "layers: $dir"
         done
-              
+
       - cd functions
       # Loop through each subdirectory
       - |
