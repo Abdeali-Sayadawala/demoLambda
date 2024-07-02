@@ -14,8 +14,12 @@ phases:
   build:
     commands:
       - echo "Build phase"
-      - cd lamdba/functions  # Replace with the path to your root directory
-
+      - cd lamdba  # Replace with the path to your root directory
+      - |
+        for dir in ./layers/; do
+          echo "layers: $dir"
+      
+      - cd functions
       # Loop through each subdirectory
       - |
         for dir in lambda-*.prm; do
