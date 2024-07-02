@@ -16,9 +16,12 @@ phases:
       - echo "Build phase"
       - cd lamdba  # Replace with the path to your root directory
       - |
-        for dir in ./layers/*; do
+        cd layers
+        for dir in ./*; do
           echo "layers: $dir"
+          (cd $dir && zip -r "../$dir.zip" ./*;)
         done
+        cd ..
 
       - cd functions
       # Loop through each subdirectory
