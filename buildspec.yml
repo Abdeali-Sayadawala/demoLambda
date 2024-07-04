@@ -71,5 +71,3 @@ phases:
     commands:
       - echo "Post-build phase"
       # Any commands to execute after the build (optional)
-
---vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-071f712345678e7c8,SecurityGroupIds=sg-085912345678492fb
