@@ -23,7 +23,7 @@ phases:
           echo "processing lambda layer: $layer_name"
           (cd $dir && zip -r "../$layer_name.zip" ./*;)
           echo "creating lambda layer: $layer_name"
-          layer_arn=$(aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.12 | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["LayerVersionArn"]')
+          layer_arn=$(aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.12 | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["LayerVersionArn"])')
           echo "Layer version ARN: $layer_arn"
         done
         cd ..
