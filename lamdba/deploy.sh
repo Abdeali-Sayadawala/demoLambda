@@ -9,7 +9,7 @@ for dir in ./*; do
     latest_layer_arn=$(aws lambda list-layer-versions --layer-name $layer_name --query 'LayerVersions[0].LayerVersionArn')
     latest_layer_arn="${latest_layer_arn//\"/}"
     layer_sha=$(aws lambda get-layer-version-by-arn --arn $latest_layer_arn --query 'Content.CodeSha256')
-    current_sha=$(sha256sum $layer_name.zip)
+    current_sha=$(cat $layer_name |sha256sum |cut -d' ' -f1 |xxd -r -p |base64)
     echo "Layer sha code: $layer_sha"
     echo "Current sha code: $current_sha"
     echo "creating lambda layer: $layer_name"
