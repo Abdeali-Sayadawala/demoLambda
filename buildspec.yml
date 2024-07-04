@@ -61,7 +61,7 @@ phases:
             echo "Lambda function $function_name already exists, updating..."
             aws lambda update-function-configuration --function-name $function_name --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90
             status=$(aws lambda get-function-configuration --function-name $function_name --query 'LastUpdateStatus')
-            while [ "$status" = "InProgress" ]
+            while [ "$status" = InProgress ]
             do 
               sleep 3
               echo "Status: $status"
