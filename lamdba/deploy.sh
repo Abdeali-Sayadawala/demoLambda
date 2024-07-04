@@ -5,8 +5,10 @@ for dir in ./*; do
     layer_name=$(echo $dir | awk -F"/" ' { print $2 } ')
     echo "processing lambda layer: $layer_name"
     (cd $dir && zip -r "../$layer_name.zip" ./*;)
+
     latest_layer_arn=$(aws lambda list-layer-versions --layer-name $layer_name --query 'LayerVersions[0].LayerVersionArn')
     layer_url=$(aws lambda get-layer-version-by-arn --arn $latest_layer_arn --query 'Content.CodeSha256')
+    layer_url="${layer_url//"/}"
     echo "Layer sha code: $layer_url"
     echo "creating lambda layer: $layer_name"
     layer_arn=$(aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.12 | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["LayerVersionArn"])')
