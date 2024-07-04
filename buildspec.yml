@@ -18,7 +18,8 @@ phases:
       - |
         cd layers
         for dir in ./*; do
-          layer_name=${dir:2}
+          # layer_name=${dir:2}
+          layer_name=$(echo $dir | awk -F"/" ' { print $2 } ')
           echo "processing lambda layer: $layer_name"
           (cd $dir && zip -r "../$layer_name.zip" ./*;)
           echo "creating lambda layer: $layer_name"
@@ -58,6 +59,7 @@ phases:
           if aws lambda get-function --function-name $function_name --region ap-south-1 2>/dev/null; then
             echo "Lambda function $function_name already exists, updating..."
             aws lambda update-function-code --function-name $function_name --zip-file fileb://$function_name.zip
+            aws lambda update-function-configuration --function-name $function_name 
           else
             echo "Lambda function $function_name does not exist, creating..."
             aws lambda create-function --function-name $function_name --role $function_role_arn --runtime python3.11 --handler lambda_function.lambda_handler --zip-file fileb://$function_name.zip
@@ -68,3 +70,5 @@ phases:
     commands:
       - echo "Post-build phase"
       # Any commands to execute after the build (optional)
+
+--vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-071f712345678e7c8,SecurityGroupIds=sg-085912345678492fb
