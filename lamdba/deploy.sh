@@ -11,7 +11,7 @@ for dir in ./*; do
     layer_sha=$(aws lambda get-layer-version-by-arn --arn $latest_layer_arn --query 'Content.CodeSha256')
     current_sha=$(sha256sum $layer_name.zip)
     echo "Layer sha code: $layer_sha"
-
+    echo "Current sha code: $current_sha"
     echo "creating lambda layer: $layer_name"
     layer_arn=$(aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.12 | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["LayerVersionArn"])')
     echo "Layer version ARN: $layer_arn"
