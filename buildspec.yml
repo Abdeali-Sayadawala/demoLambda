@@ -64,6 +64,7 @@ phases:
             while [ aws lambda get-function-configuration --function-name $function_name --query 'LastUpdateStatus' -eq InProgress ]
             do 
               sleep 3
+            done
             aws lambda update-function-code --function-name $function_name --zip-file fileb://$function_name.zip
           else
             echo "Lambda function $function_name does not exist, creating..."
