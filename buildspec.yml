@@ -60,6 +60,7 @@ phases:
           if aws lambda get-function --function-name $function_name --region ap-south-1 2>/dev/null; then
             echo "Lambda function $function_name already exists, updating..."
             aws lambda update-function-configuration --function-name $function_name --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90
+            aws lambda get-function-configuration --function-code $function_name --query '[State, LastUpdateStatus]'
             aws lambda update-function-code --function-name $function_name --zip-file fileb://$function_name.zip
           else
             echo "Lambda function $function_name does not exist, creating..."
