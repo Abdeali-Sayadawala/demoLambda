@@ -8,10 +8,13 @@ for dir in ./*; do
 
     latest_layer_arn=$(aws lambda list-layer-versions --layer-name $layer_name --query 'LayerVersions[0].LayerVersionArn')
     latest_layer_arn="${latest_layer_arn//\"/}"
-    layer_sha=$(aws lambda get-layer-version-by-arn --arn $latest_layer_arn --query 'Content.CodeSha256')
-    current_sha=$(cat $layer_name |sha256sum |cut -d' ' -f1 |xxd -r -p |base64)
-    echo "Layer sha code: $layer_sha"
-    echo "Current sha code: $current_sha"
+    layer_file_url=$(aws lambda get-layer-version-by-arn --arn $latest_layer_arn --query 'Content.Location')
+    layer_file_url="${layer_file_url//\"/}"
+
+    wget -O old_code.zip "$layer_file_url"
+
+    diff <(md5sum old_code.zip | cut -f1 -d ' ') <(md5sum $layer_name.zip | cut -f1 -d ' ')
+
     echo "creating lambda layer: $layer_name"
     layer_arn=$(aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.12 | python -c 'import json,sys;obj=json.load(sys.stdin);print(obj["LayerVersionArn"])')
     echo "Layer version ARN: $layer_arn"
