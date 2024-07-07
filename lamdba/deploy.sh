@@ -10,7 +10,7 @@ do
         (cd $layer_name && zip -r "../$layer_name.zip" ./*;)
 
         echo "creating lambda layer: $layer_name"
-        aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.1
+        aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.12
     fi
 done < ./layers.yaml
 cd ..
