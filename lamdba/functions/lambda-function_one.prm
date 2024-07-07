@@ -1,3 +1,4 @@
 function_name=LambdaFunctionOne
 path=LambdaFunctionOne
 role=arn:aws:iam::256772913192:role/LambdaOneRole
+layer=psycp

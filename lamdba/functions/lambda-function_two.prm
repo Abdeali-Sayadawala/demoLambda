@@ -1,3 +1,4 @@
 function_name=LambdaFunctionTwo
 path=LambdaFunctionTwo
 role=arn:aws:iam::256772913192:role/LambdaFunctionDefault
+layer=psycp
