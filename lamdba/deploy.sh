@@ -2,6 +2,7 @@
 cd layers
 layer_file=$(cat ./layers.yaml)
 for line in $layer_file; do
+    echo "drect line $line"
     if [[ $line == -* ]];
     then
         echo "line $line"
