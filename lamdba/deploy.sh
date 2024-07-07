@@ -20,6 +20,7 @@ echo "completed processing lambda layers"
 cd functions
 for dir in lambda-*.prm; do
     echo "Processing function: $function_name";
+    latest_layer_arn=""
     lambda_prm=$(cat $dir)
     for line in $lambda_prm;
     do
