@@ -5,7 +5,7 @@ do
     if [[ $line == "-"* ]];
     then
         echo "line $line"
-        layer_name="${line#*-}"
+        layer_name=$(echo "${line#*-}" | tr -d ' ')
         echo "processing lambda layer: $layer_name"
         (cd $layer_name && zip -r "../$layer_name.zip" ./*;)
 
