@@ -46,6 +46,12 @@ for dir in lambda-*.prm; do
         esac
     done
 
+    aws lambda get-function --function-name $function_name --query 'Code.Location' | xargs curl -o ${function_name}_live.zip
+    unzip ${function_name}_live.zip
+    find $function_path/ -type f -exec md5sum {} + | sort -k 2 > git_func.txt
+    find ${function_name}_live.zip/ -type f -exec md5sum {} + | sort -k 2 > live_func.txt
+    diff -u git_func.txt live_func.txt
+
     echo "Zipping contents of $function_path";
     (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
     if aws lambda get-function --function-name $function_name --region ap-south-1 2>/dev/null; then
