@@ -46,7 +46,7 @@ for dir in lambda-*.prm; do
     done
     echo "Processing function: $function_name";
     aws lambda get-function --function-name $function_name --query 'Code.Location' | xargs curl -o ${function_name}_live.zip
-    unzip ${function_name}_live.zip
+    unzip -d ${function_name}_live/ ${function_name}_live.zip
     find $function_path/ -type f -exec md5sum {} + | sort -k 2 > git_func.txt
     find ${function_name}_live/ -type f -exec md5sum {} + | sort -k 2 > live_func.txt
     diff -u git_func.txt live_func.txt
