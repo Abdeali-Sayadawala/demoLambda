@@ -50,6 +50,10 @@ for dir in lambda-*.prm; do
     find $function_path/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > git_func.txt
     find ${function_name}_live/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > live_func.txt
 
+    cat git_func.txt
+    cat live_func.txt
+    diff -u git_func.txt live_func.txt
+
     if diff -u git_func.txt live_func.txt; then
         echo "Zipping contents of $function_path";
         (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
