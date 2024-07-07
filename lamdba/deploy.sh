@@ -46,9 +46,10 @@ for dir in lambda-*.prm; do
     done
     echo "Processing function: $function_name";
 
-    live_lambda_func=$(aws lambda get-function --function-name $function_name --region ap-south-1 --query 'Code.Location')
+    live_lambda_func=$(aws lambda get-function --function-name $function_name --region ap-south-1 --query 'Code.Location' 2>/dev/null)
 
     if $live_lambda_func; then
+        echo "Lambda function $function_name already exists, updating..."
         curl -o ${function_name}_live.zip $live_lambda_func 1>/dev/null
         unzip -d ${function_name}_live/ ${function_name}_live.zip 1>/dev/null
         find $function_path/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > git_func.txt
@@ -56,7 +57,6 @@ for dir in lambda-*.prm; do
         DIFF=$(diff -u git_func.txt live_func.txt)
 
         if [ "$DIFF" != "" ] ; then
-            echo "Lambda function $function_name already exists, updating..."
             aws lambda update-function-configuration --function-name $function_name $latest_layer_arn --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90 1>/dev/null
             aws lambda wait function-updated --function-name $function_name
             aws lambda update-function-code --function-name $function_name --zip-file fileb://$function_name.zip 1>/dev/null
