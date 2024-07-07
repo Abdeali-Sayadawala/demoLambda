@@ -54,7 +54,7 @@ for dir in lambda-*.prm; do
     cat live_func.txt
     diff -u git_func.txt live_func.txt
 
-    if diff -u git_func.txt live_func.txt; then
+    if diff git_func.txt live_func.txt; then
         echo "Zipping contents of $function_path";
         (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
         if aws lambda get-function --function-name $function_name --region ap-south-1 2>/dev/null; then
@@ -66,5 +66,7 @@ for dir in lambda-*.prm; do
             echo "Lambda function $function_name does not exist, creating..."
             aws lambda create-function --function-name $function_name $function_role_arn --runtime python3.11 $latest_layer_arn --handler lambda_function.lambda_handler --zip-file fileb://$function_name.zip --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90 1>/dev/null
         fi
+    else
+        echo "no change found in lambda code for function $function_name"
     fi
 done
