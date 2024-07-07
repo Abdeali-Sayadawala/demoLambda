@@ -46,8 +46,10 @@ for dir in lambda-*.prm; do
     done
     echo "Processing function: $function_name";
 
-    if aws lambda get-function --function-name $function_name --region ap-south-1 2>/dev/null; then
-        aws lambda get-function --function-name $function_name --region ap-south-1 --query 'Code.Location' | xargs curl -o ${function_name}_live.zip
+    live_lambda_func=$(aws lambda get-function --function-name $function_name --region ap-south-1 --query 'Code.Location')
+
+    if $live_lambda_func; then
+        curl -o ${function_name}_live.zip $live_lambda_func 1>/dev/null
         unzip -d ${function_name}_live/ ${function_name}_live.zip 1>/dev/null
         find $function_path/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > git_func.txt
         find ${function_name}_live/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > live_func.txt
@@ -65,5 +67,5 @@ for dir in lambda-*.prm; do
         echo "Lambda function $function_name does not exist, creating..."
         aws lambda create-function --function-name $function_name $function_role_arn --runtime python3.11 $latest_layer_arn --handler lambda_function.lambda_handler --zip-file fileb://$function_name.zip --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90 1>/dev/null
     fi
-    
+
 done
