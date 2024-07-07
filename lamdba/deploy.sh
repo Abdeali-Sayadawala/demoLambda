@@ -4,6 +4,7 @@ layer_file=$(cat ./layers.yaml)
 for line in $layer_file; do
     if [[ $line == -* ]];
     then
+        echo "line $line"
         layer_name="${line:1}"
         echo "processing lambda layer: $layer_name"
         (cd $layer_name && zip -r "../$layer_name.zip" ./*;)
@@ -16,7 +17,7 @@ cd ..
 echo "completed processing lambda layers"
 cd functions
 for dir in lambda-*.prm; do
-    echo "process started $dir"
+    echo "Processing function: $function_name";
     lambda_prm=$(cat $dir)
     for line in $lambda_prm;
     do
@@ -40,9 +41,7 @@ for dir in lambda-*.prm; do
                 extra=${prm_arr[1]}
                 ;;
         esac
-    done                
-    echo "Processing function: $function_name";
-    latest_layer_arn=$(aws lambda list-layer-versions --layer-name $layer_name --output text --query 'max_by(LayerVersions, &Version).LayerVersionArn')
+    done
 
     echo "Zipping contents of $function_path";
     (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
