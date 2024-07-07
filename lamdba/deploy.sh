@@ -10,7 +10,7 @@ do
         (cd $layer_name && zip -r "../$layer_name.zip" ./*;)
 
         echo "creating lambda layer: $layer_name"
-        aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.12
+        aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.12 1>/dev/null
     fi
 done < ./layers.yaml
 cd ..
@@ -46,20 +46,21 @@ for dir in lambda-*.prm; do
     done
     echo "Processing function: $function_name";
     aws lambda get-function --function-name $function_name --query 'Code.Location' | xargs curl -o ${function_name}_live.zip
-    unzip -d ${function_name}_live/ ${function_name}_live.zip
+    unzip -d ${function_name}_live/ ${function_name}_live.zip 1>/dev/null
     find $function_path/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > git_func.txt
     find ${function_name}_live/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > live_func.txt
-    diff -u git_func.txt live_func.txt
 
-    echo "Zipping contents of $function_path";
-    (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
-    if aws lambda get-function --function-name $function_name --region ap-south-1 2>/dev/null; then
-        echo "Lambda function $function_name already exists, updating..."
-        aws lambda update-function-configuration --function-name $function_name $latest_layer_arn --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90
-        aws lambda wait function-updated --function-name $function_name
-        aws lambda update-function-code --function-name $function_name --zip-file fileb://$function_name.zip
-    else
-        echo "Lambda function $function_name does not exist, creating..."
-        aws lambda create-function --function-name $function_name $function_role_arn --runtime python3.11 $latest_layer_arn --handler lambda_function.lambda_handler --zip-file fileb://$function_name.zip --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90
+    if diff -u git_func.txt live_func.txt; then
+        echo "Zipping contents of $function_path";
+        (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
+        if aws lambda get-function --function-name $function_name --region ap-south-1 2>/dev/null; then
+            echo "Lambda function $function_name already exists, updating..."
+            aws lambda update-function-configuration --function-name $function_name $latest_layer_arn --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90 1>/dev/null
+            aws lambda wait function-updated --function-name $function_name
+            aws lambda update-function-code --function-name $function_name --zip-file fileb://$function_name.zip 1>/dev/null
+        else
+            echo "Lambda function $function_name does not exist, creating..."
+            aws lambda create-function --function-name $function_name $function_role_arn --runtime python3.11 $latest_layer_arn --handler lambda_function.lambda_handler --zip-file fileb://$function_name.zip --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90 1>/dev/null
+        fi
     fi
 done
