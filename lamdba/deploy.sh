@@ -19,7 +19,6 @@ echo "completed processing lambda layers"
 
 cd functions
 for dir in lambda-*.prm; do
-    echo "Processing function: $function_name";
     latest_layer_arn=""
     lambda_prm=$(cat $dir)
     for line in $lambda_prm;
@@ -45,11 +44,11 @@ for dir in lambda-*.prm; do
                 ;;
         esac
     done
-
+    echo "Processing function: $function_name";
     aws lambda get-function --function-name $function_name --query 'Code.Location' | xargs curl -o ${function_name}_live.zip
     unzip ${function_name}_live.zip
     find $function_path/ -type f -exec md5sum {} + | sort -k 2 > git_func.txt
-    find ${function_name}_live.zip/ -type f -exec md5sum {} + | sort -k 2 > live_func.txt
+    find ${function_name}_live/ -type f -exec md5sum {} + | sort -k 2 > live_func.txt
     diff -u git_func.txt live_func.txt
 
     echo "Zipping contents of $function_path";
