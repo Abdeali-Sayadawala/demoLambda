@@ -52,7 +52,7 @@ for dir in lambda-*.prm; do
 
     cat git_func.txt
     cat live_func.txt
-    diff -u git_func.txt live_func.txt
+    DIFF=$(diff -u git_func.txt live_func.txt)
 
     if diff git_func.txt live_func.txt; then
         echo "Zipping contents of $function_path";
