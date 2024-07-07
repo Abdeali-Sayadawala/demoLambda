@@ -1,9 +1,8 @@
 #!/bin/bash
 cd layers
-layer_file=$(cat ./layers.yaml)
-for line in $layer_file; do
-    echo "drect line $line"
-    if [[ $line == -* ]];
+while IFS= read -r line
+do
+    if [[ $line == "-"* ]];
     then
         echo "line $line"
         layer_name="${line#*-}"
@@ -13,9 +12,11 @@ for line in $layer_file; do
         echo "creating lambda layer: $layer_name"
         aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.1
     fi
-done 
+done < ./layers.yaml
 cd ..
 echo "completed processing lambda layers"
+
+
 cd functions
 for dir in lambda-*.prm; do
     echo "Processing function: $function_name";
