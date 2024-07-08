@@ -47,6 +47,7 @@ for dir in lambda-*.prm; do
     echo "Processing function: $function_name";
 
     curr_lambda=$(aws lambda get-function --function-name $function_name --region ap-south-1 2>/dev/null)
+    echo "curr_lambda $curr_lambda"
     if curr_lambda; then
         echo "Lambda function $function_name already exists, updating..."
 
