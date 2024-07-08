@@ -50,7 +50,7 @@ for dir in lambda-*.prm; do
         echo "Lambda function $function_name already exists, updating..."
 
         live_lambda_func=$(aws lambda get-function --function-name $function_name --region ap-south-1 --query 'Code.Location' 2>/dev/null)
-        curl -o ${function_name}_live.zip $live_lambda_func 1>/dev/null
+        curl -o ${function_name}_live.zip $live_lambda_func
         unzip -d ${function_name}_live/ ${function_name}_live.zip 1>/dev/null
         find $function_path/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > git_func.txt
         find ${function_name}_live/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > live_func.txt
