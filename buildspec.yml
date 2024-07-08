@@ -15,7 +15,7 @@ phases:
     commands:
       - echo "Build phase"
       - cd lamdba  # Replace with the path to your root directory
-      - sh deploy.sh
+      - sh deploy.sh # This file is present in the lamdba folder, contains all the commands required for deployment
 
   post_build:
     commands:

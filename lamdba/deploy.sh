@@ -1,27 +1,31 @@
 #!/bin/bash
+
+# Processing Layers
+
 cd layers
-while IFS= read -r line
+while IFS= read -r line # iterating line by line on layers.yaml to find the layers to be deployed
 do
     if [[ $line == "-"* ]];
     then
-        echo "line $line"
-        layer_name=$(echo "${line#*-}" | tr -d ' ')
+        layer_name=$(echo "${line#*-}" | tr -d ' ') # taking everything that comes afeter "-" in the line and stripping extra spaces
         echo "processing lambda layer: $layer_name"
-        (cd $layer_name && zip -r "../$layer_name.zip" ./*;)
+        (cd $layer_name && zip -r "../$layer_name.zip" ./*;) # creating zip file with the layer libraries
 
         echo "creating lambda layer: $layer_name"
+        # deploying layer with zip file
         aws lambda publish-layer-version --layer-name $layer_name --zip-file fileb://$layer_name.zip --compatible-runtimes python3.10 python3.11 python3.12 1>/dev/null
     fi
 done < ./layers.yaml
 cd ..
 echo "completed processing lambda layers"
 
+# Processing lambda functions
 
 cd functions
-for dir in lambda-*.prm; do
+for dir in lambda-*.prm; do # iterating all the prm files for each lambda functions
     latest_layer_arn=""
     lambda_prm=$(cat $dir)
-    for line in $lambda_prm;
+    for line in $lambda_prm; # iterating all lines of prm file to get the parameters for lambda function
     do
         prm_arr=(${line//=/ })
         case "${prm_arr[0]}" in
@@ -46,18 +50,25 @@ for dir in lambda-*.prm; do
     done
     echo "Processing function: $function_name =================================================================";
 
-    curr_lambda=$(aws lambda get-function --function-name $function_name --region ap-south-1 2>/dev/null)
+    curr_lambda=$(aws lambda get-function --function-name $function_name --region ap-south-1 2>/dev/null) # checking with the function name to find if the function already exists
+    echo "curr_lambda $curr_lambda"
     if [ "$curr_lambda" != "" ]; then
         echo "Lambda function $function_name already exists, updating..."
 
-        live_lambda_func=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Code"]["Location"])')
+        live_lambda_func=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Code"]["Location"])') # getting the code zip file url from the get-function command data
+        live_lambda_func=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Configuration"]["Role"])') # getting the code zip file url from the get-function command data
+
+        # downloading the current code zip file and unzipping it
         curl -o ${function_name}_live.zip $live_lambda_func 1>/dev/null
         unzip -d ${function_name}_live/ ${function_name}_live.zip 1>/dev/null
+
+        # calculating md5sum for each file and storing them in txt files sorted by file name
         find $function_path/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > git_func.txt
         find ${function_name}_live/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > live_func.txt
-        DIFF=$(diff -u git_func.txt live_func.txt)
+        DIFF=$(diff -u git_func.txt live_func.txt) # getting the difference for each directory
 
         if [ "$DIFF" != "" ] ; then
+            # if there is difference in both the directories then update the current function code
             echo "Zipping contents of $function_path";
             (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
             aws lambda update-function-configuration --function-name $function_name $latest_layer_arn --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90 1>/dev/null
