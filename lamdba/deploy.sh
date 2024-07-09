@@ -87,6 +87,8 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
             config_commands="${config_commands} --vpc-config Ipv6AllowedForDualStack=false"
             if [ "$subnet_ids" != "" ]; then
                 live_subnet_ids=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join(lambda_data["Configuration"]["VpcConfig"]["SubnetIds"]))')
+                echo "live_subnet_ids $live_subnet_ids"
+                echo "subnet_ids $subnet_ids"
                 if [ "$subnet_ids" == "$live_subnet_ids" ]; then
                     subnet_ids_cmd=""
                 else
