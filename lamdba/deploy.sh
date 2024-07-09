@@ -54,7 +54,6 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
     echo "Processing function: $function_name =================================================================";
 
     curr_lambda=$(aws lambda get-function --function-name $function_name --region ap-south-1 2>/dev/null) # checking with the function name to find if the function already exists
-    echo "curr_lambda $curr_lambda"
     if [ "$curr_lambda" != "" ]; then
         echo "Lambda function $function_name already exists, updating..."
 
@@ -75,7 +74,9 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
         fi
         # setting role
         live_lambda_role=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Configuration"]["Role"])') # getting the code IAM role the get-function command data
-
+        if [ "$function_role_arn" == "$live_lambda_role" ]; then
+            latest_layer_arn_cmd=""
+        fi
         
 
         # calculating md5sum for each file and storing them in txt files sorted by file name
@@ -87,7 +88,7 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
             # if there is difference in both the directories then update the current function code
             echo "Zipping contents of $function_path";
             (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
-            aws lambda update-function-configuration --function-name $function_name $latest_layer_arn_cmd --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=$subnet_ids,SecurityGroupIds=$security_grps 1>/dev/null
+            aws lambda update-function-configuration --function-name $function_name $function_role_arn_cmd $latest_layer_arn_cmd --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=$subnet_ids,SecurityGroupIds=$security_grps 1>/dev/null
             aws lambda wait function-updated --function-name $function_name
             aws lambda update-function-code --function-name $function_name --zip-file fileb://$function_name.zip 1>/dev/null
         else
@@ -97,6 +98,6 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
         echo "Zipping contents of $function_path";
         (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
         echo "Lambda function $function_name does not exist, creating..."
-        aws lambda create-function --function-name $function_name $function_role_arn --runtime python3.11 $latest_layer_arn_cmd --handler lambda_function.lambda_handler --zip-file fileb://$function_name.zip --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90 1>/dev/null
+        aws lambda create-function --function-name $function_name $function_role_arn_cmd --runtime python3.11 $latest_layer_arn_cmd --handler lambda_function.lambda_handler --zip-file fileb://$function_name.zip --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90 1>/dev/null
     fi
 done
