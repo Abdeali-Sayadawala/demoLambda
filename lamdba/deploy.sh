@@ -36,12 +36,13 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
                 function_path=${prm_arr[1]}
                 ;;
             role)
-                function_role_arn="--role ${prm_arr[1]}"
+                function_role_arn=${prm_arr[1]}
+                function_role_arn_cmd="--role $function_role_arn"
                 ;;
             layer)
                 layer_name=${prm_arr[1]}
                 latest_layer_arn=$(aws lambda list-layer-versions --layer-name $layer_name --output text --query 'max_by(LayerVersions, &Version).LayerVersionArn')
-                latest_layer_arn="--layer $latest_layer_arn"
+                latest_layer_arn_cmd="--layer $latest_layer_arn"
                 ;;
             *)
                 extra=${prm_arr[1]}
@@ -57,14 +58,25 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
     if [ "$curr_lambda" != "" ]; then
         echo "Lambda function $function_name already exists, updating..."
 
-        live_lambda_url=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Code"]["Location"])') # getting the code zip file url from the get-function command data
-        live_lambda_role=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Configuration"]["Role"])') # getting the code IAM role the get-function command data
-        live_layer_arn=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join([layer["Arn"] for layer in lambda_data["Configuration"]["Layers"]])) if "Layers" in lambda_data["Configuration"] else print("")')
-        echo "live_layer_arn $live_layer_arn"
-
         # downloading the current code zip file and unzipping it
+        live_lambda_url=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Code"]["Location"])') # getting the code zip file url from the get-function command data
         curl -o ${function_name}_live.zip $live_lambda_url 1>/dev/null
         unzip -d ${function_name}_live/ ${function_name}_live.zip 1>/dev/null
+
+        # getting all configuration variables
+        # setting layer arn
+        live_layer_arn=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join([layer["Arn"] for layer in lambda_data["Configuration"]["Layers"]])) if "Layers" in lambda_data["Configuration"] else print("")')
+        if [ "$latest_layer_arn" != "" ]; then
+            if [ "$latest_layer_arn" == "$live_layer_arn" ]; then
+                latest_layer_arn_cmd=""
+            fi
+        else
+            latest_layer_arn_cmd=""
+        fi
+        # setting role
+        live_lambda_role=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Configuration"]["Role"])') # getting the code IAM role the get-function command data
+
+        
 
         # calculating md5sum for each file and storing them in txt files sorted by file name
         find $function_path/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > git_func.txt
@@ -75,7 +87,7 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
             # if there is difference in both the directories then update the current function code
             echo "Zipping contents of $function_path";
             (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
-            aws lambda update-function-configuration --function-name $function_name $latest_layer_arn --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=$subnet_ids,SecurityGroupIds=$security_grps 1>/dev/null
+            aws lambda update-function-configuration --function-name $function_name $latest_layer_arn_cmd --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=$subnet_ids,SecurityGroupIds=$security_grps 1>/dev/null
             aws lambda wait function-updated --function-name $function_name
             aws lambda update-function-code --function-name $function_name --zip-file fileb://$function_name.zip 1>/dev/null
         else
@@ -85,6 +97,6 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
         echo "Zipping contents of $function_path";
         (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
         echo "Lambda function $function_name does not exist, creating..."
-        aws lambda create-function --function-name $function_name $function_role_arn --runtime python3.11 $latest_layer_arn --handler lambda_function.lambda_handler --zip-file fileb://$function_name.zip --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90 1>/dev/null
+        aws lambda create-function --function-name $function_name $function_role_arn --runtime python3.11 $latest_layer_arn_cmd --handler lambda_function.lambda_handler --zip-file fileb://$function_name.zip --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=subnet-0256b46d74a09fa77,subnet-0aafae4a32135023f,SecurityGroupIds=sg-004c1f8cc363fdd90 1>/dev/null
     fi
 done
