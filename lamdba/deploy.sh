@@ -86,6 +86,7 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
         if [ "$subnet_ids" != "" ] || [ "$security_grps" != "" ]; then
             config_commands="${config_commands} --vpc-config Ipv6AllowedForDualStack=false"
             if [ "$subnet_ids" != "" ]; then
+                echo "subnet ids"
                 live_subnet_ids=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join(["Configuration"]["VpcConfig"]["SubnetIds"]))')
                 if [ "$subnet_ids" == "$live_subnet_ids" ]; then
                     subnet_ids_cmd=""
@@ -96,6 +97,7 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
                 latest_layer_arn_cmd=""
             fi
             if [ "$security_grps" != "" ]; then
+                echo "security grp ids"
                 live_security_grps=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join(["Configuration"]["VpcConfig"]["SecurityGroupIds"]))')
                 if [ "$security_grps" == "$live_security_grps" ]; then
                     security_grps_cmd=""
@@ -105,9 +107,9 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
             else
                 latest_layer_arn_cmd=""
             fi
-
         fi
         
+        echo "config command $config_commands"
 
         # calculating md5sum for each file and storing them in txt files sorted by file name
         find $function_path/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" " > git_func.txt
