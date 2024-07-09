@@ -63,11 +63,14 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
         unzip -d ${function_name}_live/ ${function_name}_live.zip 1>/dev/null
 
         # getting all configuration variables
+        config_commands=""
         # setting layer arn
         live_layer_arn=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join([layer["Arn"] for layer in lambda_data["Configuration"]["Layers"]])) if "Layers" in lambda_data["Configuration"] else print("")')
         if [ "$latest_layer_arn" != "" ]; then
             if [ "$latest_layer_arn" == "$live_layer_arn" ]; then
                 latest_layer_arn_cmd=""
+            else
+                config_commands="${config_commands} ${latest_layer_arn_cmd}"
             fi
         else
             latest_layer_arn_cmd=""
@@ -75,7 +78,34 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
         # setting role
         live_lambda_role=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Configuration"]["Role"])') # getting the code IAM role the get-function command data
         if [ "$function_role_arn" == "$live_lambda_role" ]; then
-            latest_layer_arn_cmd=""
+            function_role_arn_cmd=""
+        else
+            config_commands="${config_commands} ${function_role_arn_cmd}"
+        fi
+        # setting subnet ids and security groups
+        if [ "$subnet_ids" != "" ] || [ "$security_grps" != "" ]; then
+            config_commands="${config_commands} --vpc-config Ipv6AllowedForDualStack=false"
+            if [ "$subnet_ids" != "" ]; then
+                live_subnet_ids=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join(["Configuration"]["VpcConfig"]["SubnetIds"]))')
+                if [ "$subnet_ids" == "$live_subnet_ids" ]; then
+                    subnet_ids_cmd=""
+                else
+                    config_commands="${config_commands},SubnetIds=$subnet_ids"
+                fi
+            else
+                latest_layer_arn_cmd=""
+            fi
+            if [ "$security_grps" != "" ]; then
+                live_security_grps=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join(["Configuration"]["VpcConfig"]["SecurityGroupIds"]))')
+                if [ "$security_grps" == "$live_security_grps" ]; then
+                    security_grps_cmd=""
+                else
+                    config_commands="${config_commands},SecurityGroupIds=$security_grps"
+                fi
+            else
+                latest_layer_arn_cmd=""
+            fi
+
         fi
         
 
@@ -88,7 +118,7 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
             # if there is difference in both the directories then update the current function code
             echo "Zipping contents of $function_path";
             (cd $function_path && zip -r "../$function_name.zip" ./*;)  # Zip the contents of each subdirectory
-            aws lambda update-function-configuration --function-name $function_name $function_role_arn_cmd $latest_layer_arn_cmd --vpc-config Ipv6AllowedForDualStack=false,SubnetIds=$subnet_ids,SecurityGroupIds=$security_grps 1>/dev/null
+            aws lambda update-function-configuration --function-name $function_name $config_commands 1>/dev/null
             aws lambda wait function-updated --function-name $function_name
             aws lambda update-function-code --function-name $function_name --zip-file fileb://$function_name.zip 1>/dev/null
         else
