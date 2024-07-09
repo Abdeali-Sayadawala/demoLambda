@@ -86,8 +86,7 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
         if [ "$subnet_ids" != "" ] || [ "$security_grps" != "" ]; then
             config_commands="${config_commands} --vpc-config Ipv6AllowedForDualStack=false"
             if [ "$subnet_ids" != "" ]; then
-                live_subnet_ids=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join(["Configuration"]["VpcConfig"]["SubnetIds"]))')
-                echo "subnet ids $live_subnet_ids"
+                live_subnet_ids=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join(lambda_data["Configuration"]["VpcConfig"]["SubnetIds"]))')
                 if [ "$subnet_ids" == "$live_subnet_ids" ]; then
                     subnet_ids_cmd=""
                 else
@@ -97,8 +96,7 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
                 latest_layer_arn_cmd=""
             fi
             if [ "$security_grps" != "" ]; then
-                live_security_grps=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join(["Configuration"]["VpcConfig"]["SecurityGroupIds"]))')
-                echo "security grp ids $live_security_grps"
+                live_security_grps=$(echo $curr_lambda | python -c 'import json,sys;lambda_data=json.load(sys.stdin);print(",".join(lambda_data["Configuration"]["VpcConfig"]["SecurityGroupIds"]))')
                 if [ "$security_grps" == "$live_security_grps" ]; then
                     security_grps_cmd=""
                 else
