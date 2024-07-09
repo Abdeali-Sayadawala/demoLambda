@@ -59,7 +59,7 @@ for dir in lambda-*.prm; do # iterating all the prm files for each lambda functi
 
         live_lambda_url=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Code"]["Location"])') # getting the code zip file url from the get-function command data
         live_lambda_role=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Configuration"]["Role"])') # getting the code IAM role the get-function command data
-        live_layer_arn=$(echo $curr_lambda | python -c 'import json,sys;print(json.load(sys.stdin)["Configuration"]["Layers"][0]["Arn"])')
+        live_layer_arn=$(echo $curr_lambda | python -c 'import json,sys;print(",".join([layer["Arn"] for layer in json.load(sys.stdin)["Configuration"]["Layers"]])) if "Layers" in json.load(sys.stdin)["Configuration"] else print("")')
         echo "live_layer_arn $live_layer_arn"
 
         # downloading the current code zip file and unzipping it
